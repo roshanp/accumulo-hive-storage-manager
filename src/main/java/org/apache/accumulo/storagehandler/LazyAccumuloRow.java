@@ -1,14 +1,17 @@
 package org.apache.accumulo.storagehandler;
 
-import org.apache.hadoop.hive.serde2.lazy.*;
-import org.apache.hadoop.hive.serde2.lazy.objectinspector.LazySimpleStructObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.StructField;
-import org.apache.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import org.apache.hadoop.hive.serde2.lazy.ByteArrayRef;
+import org.apache.hadoop.hive.serde2.lazy.LazyFactory;
+import org.apache.hadoop.hive.serde2.lazy.LazyObject;
+import org.apache.hadoop.hive.serde2.lazy.LazyStruct;
+import org.apache.hadoop.hive.serde2.lazy.objectinspector.LazySimpleStructObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -22,7 +25,8 @@ public class LazyAccumuloRow extends LazyStruct{
     private List<String> fetchCols;
     private ArrayList<Object> cachedList = new ArrayList<Object>();
 
-    private static final Pattern PIPE = Pattern.compile("[|]");
+    private static final String PIPE_CHAR = "|";
+    private static final Pattern PIPE = Pattern.compile("["+PIPE_CHAR+"]");
     private static final Logger log = Logger.getLogger(LazyAccumuloRow.class);
 
     public LazyAccumuloRow(LazySimpleStructObjectInspector inspector) {
@@ -72,8 +76,12 @@ public class LazyAccumuloRow extends LazyStruct{
                 ref.setData(row.getRowId().getBytes());
             } else {  //find the matching column tuple.
                 String[] famQualPieces = PIPE.split(famQualPair);
+                if (famQualPieces.length == 1 && famQualPair.endsWith(PIPE_CHAR)) {
+                    famQualPieces = new String[]{famQualPieces[0], ""}; //support for empty qual
+                }
                 if (famQualPieces.length != 2)
                     throw new IllegalArgumentException("Malformed famQualPair: " + famQualPair);
+
                 byte[] val = row.getValue(famQualPieces[0], famQualPieces[1]);
                 if (val == null){
                     return null;

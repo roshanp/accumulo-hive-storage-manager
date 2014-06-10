@@ -1,6 +1,25 @@
 package org.apache.accumulo.storagehandler;
 
-import org.apache.accumulo.core.client.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.SortedMap;
+
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.BatchWriter;
+import org.apache.accumulo.core.client.BatchWriterConfig;
+import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.client.Scanner;
+import org.apache.accumulo.core.client.TableExistsException;
+import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
@@ -8,7 +27,14 @@ import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.accumulo.storagehandler.predicate.PrimitiveComparisonFilter;
-import org.apache.accumulo.storagehandler.predicate.compare.*;
+import org.apache.accumulo.storagehandler.predicate.compare.DoubleCompare;
+import org.apache.accumulo.storagehandler.predicate.compare.Equal;
+import org.apache.accumulo.storagehandler.predicate.compare.GreaterThan;
+import org.apache.accumulo.storagehandler.predicate.compare.GreaterThanOrEqual;
+import org.apache.accumulo.storagehandler.predicate.compare.IntCompare;
+import org.apache.accumulo.storagehandler.predicate.compare.LessThan;
+import org.apache.accumulo.storagehandler.predicate.compare.LongCompare;
+import org.apache.accumulo.storagehandler.predicate.compare.StringCompare;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -19,15 +45,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
-import org.datanucleus.sco.backed.Map;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.SortedMap;
-
-import static org.testng.Assert.*;
 
 public class HiveAccumuloInputFormatTest {
 
@@ -140,8 +159,10 @@ public class HiveAccumuloInputFormatTest {
             AccumuloHiveRow row = new AccumuloHiveRow();
             row.add(COLUMN_FAMILY.toString(), NAME.toString(), "brian".getBytes());
             row.add(COLUMN_FAMILY.toString(), SID.toString(), parseIntBytes("1"));
-            row.add(COLUMN_FAMILY.toString(), DEGREES.toString(), parseDoubleBytes("44.5"));
-            row.add(COLUMN_FAMILY.toString(), MILLIS.toString(), parseLongBytes("555"));
+            row.add(COLUMN_FAMILY.toString(), DEGREES.toString(),
+                parseDoubleBytes("44.5"));
+            row.add(COLUMN_FAMILY.toString(), MILLIS.toString(),
+                parseLongBytes("555"));
             assertTrue(reader.next(rowId, row));
             assertEquals(row.getRowId(), rowId.toString());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), NAME.toString()));

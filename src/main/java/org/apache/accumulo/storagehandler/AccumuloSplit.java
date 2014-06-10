@@ -18,16 +18,16 @@
 
 package org.apache.accumulo.storagehandler;
 
-import org.apache.accumulo.core.client.mapreduce.InputFormatBase.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
+import org.apache.accumulo.core.client.mapreduce.RangeInputSplit;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 
 
 

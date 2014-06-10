@@ -1,5 +1,12 @@
 package org.apache.accumulo.storagehandler;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+import java.util.Properties;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -7,10 +14,6 @@ import org.apache.hadoop.hive.serde2.lazy.LazyString;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
-
-import java.util.Properties;
-
-import static org.testng.Assert.*;
 
 public class AccumuloSerdeTest {
 
@@ -101,6 +104,21 @@ public class AccumuloSerdeTest {
         Configuration conf = new Configuration();
         properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,rowID,cf|f2,cf|f3");
         properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2,field3,field4");
+        try {
+            serde.initialize(conf, properties);
+            assertNotNull(serde.getCachedRow());
+        } catch (SerDeException e) {
+            log.error(e);
+            fail();
+        }
+    }
+
+    @Test
+    public void withoutColQual() {
+        Properties properties = new Properties();
+        Configuration conf = new Configuration();
+        properties.setProperty(AccumuloSerde.COLUMN_MAPPINGS, "cf|f1,cf|,cf|f3");
+        properties.setProperty(serdeConstants.LIST_COLUMNS, "field1,field2,field3");
         try {
             serde.initialize(conf, properties);
             assertNotNull(serde.getCachedRow());

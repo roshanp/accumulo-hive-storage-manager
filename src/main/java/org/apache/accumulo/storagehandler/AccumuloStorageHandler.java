@@ -1,6 +1,14 @@
 package org.apache.accumulo.storagehandler;
 
-import org.apache.accumulo.core.client.*;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.TableExistsException;
+import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.admin.TableOperations;
 import org.apache.accumulo.storagehandler.predicate.AccumuloPredicateHandler;
 import org.apache.hadoop.conf.Configuration;
@@ -22,9 +30,6 @@ import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Create table mapping to Accumulo for Hive.
@@ -72,6 +77,19 @@ public class AccumuloStorageHandler
             jobProps.put(AccumuloSerde.NO_ITERATOR_PUSHDOWN, useIterators);
         }
 
+    }
+
+    @Override
+    public void configureJobConf(TableDesc desc, JobConf jobConf) {
+        Properties tblProperties = desc.getProperties();
+        jobConf.set(AccumuloSerde.COLUMN_MAPPINGS,
+            tblProperties.getProperty(AccumuloSerde.COLUMN_MAPPINGS));
+        String tableName = tblProperties.getProperty(AccumuloSerde.TABLE_NAME);
+        jobConf.set(AccumuloSerde.TABLE_NAME, tableName);
+        String useIterators = tblProperties.getProperty(AccumuloSerde.NO_ITERATOR_PUSHDOWN);
+        if(useIterators != null) {
+          jobConf.set(AccumuloSerde.NO_ITERATOR_PUSHDOWN, useIterators);
+        }
     }
 
     private String getTableName(Table table) throws MetaException{

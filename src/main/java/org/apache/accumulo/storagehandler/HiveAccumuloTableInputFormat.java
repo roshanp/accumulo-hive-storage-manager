@@ -1,8 +1,21 @@
 package org.apache.accumulo.storagehandler;
 
-import com.google.common.collect.Lists;
-import org.apache.accumulo.core.client.*;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.regex.Pattern;
+
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.mapreduce.AccumuloRowInputFormat;
+import org.apache.accumulo.core.client.mapreduce.RangeInputSplit;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
@@ -16,19 +29,18 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TaskAttemptID;
-import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.apache.hadoop.util.StringUtils;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Pattern;
+import com.google.common.collect.Lists;
 
 /**
  * Wraps older InputFormat for use with Hive.
@@ -40,8 +52,9 @@ public class HiveAccumuloTableInputFormat
         extends AccumuloRowInputFormat
         implements org.apache.hadoop.mapred.InputFormat<Text, AccumuloHiveRow> {
 
-    private static final Pattern PIPE = Pattern.compile("[|]");
-    private AccumuloPredicateHandler predicateHandler = AccumuloPredicateHandler.getInstance();
+  private static final Pattern PIPE = Pattern.compile("[|]");
+  public static final Text EMPTY_CQ = new Text();
+  private AccumuloPredicateHandler predicateHandler = AccumuloPredicateHandler.getInstance();
     private Instance instance;
 
     @Override
@@ -63,8 +76,7 @@ public class HiveAccumuloTableInputFormat
                 throw new IOException("Number of colfam:qual pairs + rowkey (" + (colQualFamPairs.size() + incForRowID) + ")" +
                         " numbers less than the hive table columns. (" + readColIds.size() + ")");
 
-            JobContext context = new JobContext(job.getConfiguration(), job.getJobID());
-            Path[] tablePaths = FileInputFormat.getInputPaths(context);
+            Path[] tablePaths = FileInputFormat.getInputPaths(job);
             List<org.apache.hadoop.mapreduce.InputSplit> splits = super.getSplits(job); //get splits from Accumulo.
             InputSplit[] newSplits = new InputSplit[splits.size()];
             for (int i = 0; i < splits.size(); i++) {
@@ -137,7 +149,7 @@ public class HiveAccumuloTableInputFormat
 
             //for use to initialize final record reader.
             final TaskAttemptContext tac =
-                    new TaskAttemptContext(job.getConfiguration(), new TaskAttemptID()) {
+                    new TaskAttemptContextImpl(job.getConfiguration(), new TaskAttemptID()) {
 
                         @Override
                         public void progress() {
@@ -285,6 +297,8 @@ public class HiveAccumuloTableInputFormat
             Text fam = new Text(qualFamPieces[0]);
             if(qualFamPieces.length > 1) {
                 pairs.add(new Pair<Text, Text>(fam, new Text(qualFamPieces[1])));
+            } else {
+                pairs.add(new Pair<Text, Text>(fam, EMPTY_CQ));
             }
         }
         return pairs;
