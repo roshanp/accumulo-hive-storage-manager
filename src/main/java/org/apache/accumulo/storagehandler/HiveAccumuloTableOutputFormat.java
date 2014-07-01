@@ -44,7 +44,7 @@ public class HiveAccumuloTableOutputFormat
             final Progressable progressable)
       throws IOException {
         //throw new UnsupportedOperationException("INSERT not yet supported to Accumulo");
-        return new AccumuloHiveRecordWriter();
+        return new AccumuloHiveRecordWriter(jobConf, properties);
     }
 
     @Override

@@ -153,7 +153,7 @@ public class AccumuloSerde implements SerDe {
             if(accumuloCol.equals("rowID")){
               row.setRowId(value.toString());
             } else {
-              if(value != null && value.equals("")){
+              if(value != null && !value.equals("")){
                 // split column family and column qualifier
                 String[] line = PIPE.split(accumuloCol);
                 log.info("line " + line.toString() + line.length);   
