@@ -153,14 +153,16 @@ public class AccumuloSerde implements SerDe {
             if(accumuloCol.equals("rowID")){
               row.setRowId(value.toString());
             } else {
-              // split column family and column qualifier
-              String[] line = PIPE.split(accumuloCol);
-              log.info("line " + line.toString() + line.length);
-                            
-              String columnFamily = line[0];
-              String columnQualifier = line[1];
-              log.info("columnFamily = " + columnFamily + "  columnQualifier = " + columnQualifier);
-              row.add(columnFamily, columnQualifier, value.getBytes());
+              if(value != null && value.equals("")){
+                // split column family and column qualifier
+                String[] line = PIPE.split(accumuloCol);
+                log.info("line " + line.toString() + line.length);   
+                String columnFamily = line[0];
+                String columnQualifier = line[1];
+                log.info("columnFamily = " + columnFamily + "  columnQualifier = " + columnQualifier);
+                row.add(columnFamily, columnQualifier, value.getBytes());
+              }
+
             }
           }
         }
