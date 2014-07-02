@@ -139,8 +139,16 @@ public class AccumuloStorageHandler
     }
 
     @Override
-    public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String> map) {
-        //TODO: implement for serialization to Accumulo
+    public void configureOutputJobProperties(TableDesc tableDesc, Map<String, String> properties) {
+      Properties props = tableDesc.getProperties();
+      properties.put(AccumuloSerde.COLUMN_MAPPINGS,
+              props.getProperty(AccumuloSerde.COLUMN_MAPPINGS));
+      properties.put(AccumuloSerde.TABLE_NAME,
+              props.getProperty(AccumuloSerde.TABLE_NAME));
+      String useIterators = props.getProperty(AccumuloSerde.NO_ITERATOR_PUSHDOWN);
+      if(useIterators != null) {
+          properties.put(AccumuloSerde.NO_ITERATOR_PUSHDOWN, useIterators);
+      }
     }
 
     @Override

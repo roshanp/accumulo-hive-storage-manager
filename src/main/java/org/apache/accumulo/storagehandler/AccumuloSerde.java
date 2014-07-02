@@ -134,45 +134,33 @@ public class AccumuloSerde implements SerDe {
         List<? extends StructField> fields = structObjectInspector.getAllStructFieldRefs();
         // count of columns SerDe was initialized with
         int fieldCount = serDeParameters.getColumnNames().size();
-        log.info("fetchCols (accumulo.columns.mapping) = " + fetchCols.toString());
-        // loop for each hive field that SerDe was initialized with and lookup values in Object o to convert to AccumuloHiveRow
+
         for(int i=0; i < fieldCount; i++){
-          log.info("hive column = " + serDeParameters.getColumnNames().get(i));
           StructField structField = fields.get(i);
           String accumuloCol = fetchCols.get(i);
           if (structField != null){
-            // Object has this column
             // lookup accumulo mapping for this hive column and transform to AccumuloHiveRow
             Object fieldData = structObjectInspector.getStructFieldData(o, structField);
             ObjectInspector fieldDataOI = fields.get(i).getFieldObjectInspector();
-            log.info("accumulo column fam/qual " + accumuloCol);
-            log.info("column type " + serDeParameters.getColumnTypes().get(i).getTypeName());
             StringObjectInspector fieldDataStringOI = (StringObjectInspector)fieldDataOI;
             Text value = fieldDataStringOI.getPrimitiveWritableObject(fieldData);
-            if(value != null && !value.equals("")) {
-              log.info("column value "  + value.toString());
-            } else {
-              log.info("column value is null");
-            }
-            if(accumuloCol.equals("rowID")){
-              row.setRowId(value.toString());
-            } else {
-              if(value != null && !value.equals("")){
+            // only create tuple if there is a value
+            if(value != null && !value.toString().equals("")){
+              if(accumuloCol.equals("rowID")){
+                row.setRowId(value.toString());
+              } else {
                 // split column family and column qualifier
                 String[] line = PIPE.split(accumuloCol);
-                log.info("line " + line.toString() + line.length);   
                 String columnFamily = line[0];
                 String columnQualifier = line[1];
-                log.info("columnFamily = " + columnFamily + "  columnQualifier = " + columnQualifier);
                 row.add(columnFamily, columnQualifier, value.getBytes());
               }
-
             }
+            
           }
         }
-        log.info("returning row = " + row.toString());
+        log.info("created AccumuloHiveRow = " + row.toString());
         return row;
-        //throw new UnsupportedOperationException("Serialization to Accumulo not yet supported" + fetchCols.toString());
     }
 
     public Object deserialize(Writable writable) throws SerDeException {

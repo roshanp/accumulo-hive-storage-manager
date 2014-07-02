@@ -29,25 +29,10 @@ public class AccumuloHiveRecordWriter implements RecordWriter {
   }
   private JobConf jobConf;
   private Properties properties;
-  private Instance instance;
   
   public AccumuloHiveRecordWriter(JobConf jobConf, Properties properties) {
     this.jobConf = jobConf;
     this.properties = properties;
-  }
-
-  private Instance getInstance(String id, String zookeepers) {
-    if (instance != null) {
-      return instance;
-    } else {
-      return new ZooKeeperInstance(id, zookeepers);
-    }
-  }
-  
-  @Override
-  public void close(boolean arg0) throws IOException {
-    // TODO Auto-generated method stub
-
   }
 
   @Override
@@ -64,12 +49,9 @@ public class AccumuloHiveRecordWriter implements RecordWriter {
       }
     }
 
-    log.info("jobConf " + jobConf.toString());
-    log.info("properties " + properties.toString());
     // get accumulo connection
     Connector connector = AccumuloHiveUtils.getConnector(jobConf);
-    log.info("instance =  " + connector.getInstance().getInstanceName());
-    // implement a batchwriter next! 
+    // write accumulo records
     AccumuloHiveRow row = (AccumuloHiveRow)writable;
     BatchWriterConfig batchWriterConfig = new BatchWriterConfig();
     try {
@@ -77,18 +59,22 @@ public class AccumuloHiveRecordWriter implements RecordWriter {
       // create mutation with rowid
       Mutation mutation = new Mutation(new Text(row.getRowId()));
       for(AccumuloHiveRow.ColumnTuple tuple : row.tuples){
-        // add accumulo record
+        // add each tuple
         mutation.put(tuple.getCf(), tuple.getQual(), new Value(tuple.getValue()));
       }
       batchWriter.addMutation(mutation);
       batchWriter.close();
     } catch (TableNotFoundException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     } catch (MutationsRejectedException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
+    
+  }
+
+  @Override
+  public void close(boolean arg0) throws IOException {
+    // TODO Auto-generated method stub
     
   }
 
