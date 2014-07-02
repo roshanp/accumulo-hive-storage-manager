@@ -149,7 +149,11 @@ public class AccumuloSerde implements SerDe {
             log.info("column type " + serDeParameters.getColumnTypes().get(i).getTypeName());
             StringObjectInspector fieldDataStringOI = (StringObjectInspector)fieldDataOI;
             Text value = fieldDataStringOI.getPrimitiveWritableObject(fieldData);
-            log.info("column value "  + value.toString());
+            if(value != null && !value.equals("")) {
+              log.info("column value "  + value.toString());
+            } else {
+              log.info("column value is null");
+            }
             if(accumuloCol.equals("rowID")){
               row.setRowId(value.toString());
             } else {

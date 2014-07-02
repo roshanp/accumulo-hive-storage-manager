@@ -3,11 +3,19 @@ package org.apache.accumulo.storagehandler;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.apache.accumulo.core.client.BatchWriter;
+import org.apache.accumulo.core.client.BatchWriterConfig;
+import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.MutationsRejectedException;
+import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
+import org.apache.accumulo.core.data.Mutation;
+import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.io.MapWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.log4j.Level;
@@ -45,6 +53,7 @@ public class AccumuloHiveRecordWriter implements RecordWriter {
   @Override
   public void write(Writable writable) throws IOException {
     log.info("writing AccumuloHiveRow to accumulo " + writable.getClass());
+    
     if(!(writable instanceof AccumuloHiveRow)){
       try {
         throw new SerDeException(getClass().getName() + " : " +
@@ -54,17 +63,32 @@ public class AccumuloHiveRecordWriter implements RecordWriter {
         e.printStackTrace();
       }
     }
-      
-    // configure an accumulo job to insert 
+
     log.info("jobConf " + jobConf.toString());
     log.info("properties " + properties.toString());
-    String user = jobConf.get(AccumuloSerde.USER_NAME);
-    String pass = jobConf.get(AccumuloSerde.USER_PASS);
-    String id = jobConf.get(AccumuloSerde.INSTANCE_ID);
-    String zookeepers = jobConf.get(AccumuloSerde.ZOOKEEPERS);
-    instance = getInstance(id, zookeepers);
-    log.info("user " + user + " pass " + pass + "  id " + zookeepers + " instance " + instance);
-    // implement a batchwriter next!  
+    // get accumulo connection
+    Connector connector = AccumuloHiveUtils.getConnector(jobConf);
+    log.info("instance =  " + connector.getInstance().getInstanceName());
+    // implement a batchwriter next! 
+    AccumuloHiveRow row = (AccumuloHiveRow)writable;
+    BatchWriterConfig batchWriterConfig = new BatchWriterConfig();
+    try {
+      BatchWriter batchWriter = connector.createBatchWriter(properties.getProperty(AccumuloSerde.TABLE_NAME), batchWriterConfig);
+      // create mutation with rowid
+      Mutation mutation = new Mutation(new Text(row.getRowId()));
+      for(AccumuloHiveRow.ColumnTuple tuple : row.tuples){
+        // add accumulo record
+        mutation.put(tuple.getCf(), tuple.getQual(), new Value(tuple.getValue()));
+      }
+      batchWriter.addMutation(mutation);
+      batchWriter.close();
+    } catch (TableNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (MutationsRejectedException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
     
   }
 
