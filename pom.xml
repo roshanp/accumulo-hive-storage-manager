@@ -29,6 +29,7 @@
     <guava.version>13.0</guava.version>
     <hadoop.version>2.2.0</hadoop.version>
     <hive-exec.version>0.12.0</hive-exec.version>
+    <jmockit.version>1.6</jmockit.version>
   </properties>
   <dependencies>
     <dependency>
@@ -115,6 +116,12 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.jmockit</groupId>
+      <artifactId>jmockit</artifactId>
+      <version>${jmockit.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>
