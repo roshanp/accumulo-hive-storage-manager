@@ -14,7 +14,10 @@ import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.lazy.LazyString;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 
@@ -204,15 +207,38 @@ public class AccumuloSerdeTest {
             fail();
         }
     }
+    
     @Test
-    public void serialize(@Mocked final LazySimpleSerDe.SerDeParameters serDeParameters,
-        @Mocked final List<? extends StructField> fields){
+    public void testSerialize(@Mocked final Object o,
+        @Mocked final ObjectInspector objectInspector,
+        @Mocked final StructObjectInspector structObjectInspector,
+        @Mocked final LazySimpleSerDe.SerDeParameters serDeParameters,
+        @Mocked final List<? extends StructField> fields,
+        @Mocked final int i,
+        @Mocked final StructField structField,
+        @Mocked final List<String> fetchCols,
+        @Mocked final String accumuloCol,
+        @Mocked final StringObjectInspector fieldDataStringOI,
+        @Mocked final Object fieldData,
+        @Mocked final Text value,
+        @Mocked final AccumuloHiveRow row) throws Exception{
       
       new NonStrictExpectations() {{
         serDeParameters.getColumnNames().size();
-        result=2;
+        result=1;
+        fields.get(i);
+        result=structField;
+        fetchCols.get(i);
+        result=accumuloCol;
+        fieldDataStringOI.getPrimitiveWritableObject(fieldData);
+        result=value;
+        accumuloCol.equals("rowID");
+        result=true;
+        row.setRowId(value.toString());
         
       }};
+      
+      serde.serialize(o, objectInspector);
       
     }
 }
