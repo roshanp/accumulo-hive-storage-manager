@@ -1,27 +1,24 @@
 package org.apache.accumulo.storagehandler.predicate.compare;
 
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
 import java.nio.ByteBuffer;
 
-import static org.testng.Assert.*;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class IntCompareTest {
-    private IntCompare intCompare;
+    private static IntCompare intCompare;
 
 
     @BeforeClass
-    public void setup() {
+    public static void setup() {
         byte[] ibytes = new byte[4];
         ByteBuffer.wrap(ibytes).putInt(10);
         intCompare = new IntCompare();
         intCompare.init(ibytes);
     }
 
-    public byte[] getBytes(int val) {
+    public static byte[] getBytes(int val) {
         byte [] intBytes = new byte[4];
         ByteBuffer.wrap(intBytes).putInt(val);
         int serializedVal = intCompare.serialize(intBytes);

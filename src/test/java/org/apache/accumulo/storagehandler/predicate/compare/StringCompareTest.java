@@ -1,21 +1,18 @@
 package org.apache.accumulo.storagehandler.predicate.compare;
 
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
 import java.nio.ByteBuffer;
 
-import static org.testng.Assert.*;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class StringCompareTest {
 
-    private StringCompare strCompare;
+    private static StringCompare strCompare;
 
 
     @BeforeClass
-    public void setup() {
+    public static void setup() {
         strCompare = new StringCompare();
         strCompare.init("aaa".getBytes());
     }

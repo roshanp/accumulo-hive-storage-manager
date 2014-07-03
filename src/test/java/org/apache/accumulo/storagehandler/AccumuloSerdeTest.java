@@ -1,9 +1,7 @@
 package org.apache.accumulo.storagehandler;
+import static org.junit.Assert.*;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import org.junit.Test;
 
 import java.util.List;
 import java.util.Properties;
@@ -19,7 +17,6 @@ import org.apache.hadoop.hive.serde2.lazy.LazyString;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
-import org.testng.annotations.Test;
 
 import org.apache.accumulo.storagehandler.AccumuloSerde;
 

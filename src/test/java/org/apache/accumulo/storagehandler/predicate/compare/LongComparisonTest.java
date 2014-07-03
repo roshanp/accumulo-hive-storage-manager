@@ -1,27 +1,25 @@
 package org.apache.accumulo.storagehandler.predicate.compare;
 
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
 import java.nio.ByteBuffer;
 
-import static org.testng.Assert.*;
-import static org.testng.Assert.assertEquals;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class LongComparisonTest {
 
-    private LongCompare longComp;
+    private static LongCompare longComp;
 
 
     @BeforeClass
-    public void setup() {
+    public static void setup() {
         byte[] lBytes = new byte[8];
         ByteBuffer.wrap(lBytes).putLong(10l);
         longComp = new LongCompare();
         longComp.init(lBytes);
     }
 
-    public byte[] getBytes(long val) {
+    public static byte[] getBytes(long val) {
         byte [] lonBytes = new byte[8];
         ByteBuffer.wrap(lonBytes).putLong(val);
         long lon = longComp.serialize(lonBytes);

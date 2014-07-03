@@ -1,34 +1,30 @@
 package org.apache.accumulo.storagehandler.predicate.compare;
 
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
-import static org.testng.Assert.*;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class DoubleCompareTest {
 
-    private DoubleCompare doubleCompare;
-
+    private static DoubleCompare doubleCompare;
 
     @BeforeClass
-    public void setup() {
+    public static void setup() {
         doubleCompare = new DoubleCompare();
         byte[] db = new byte[8];
         ByteBuffer.wrap(db).putDouble(10.5d);
         doubleCompare.init(db);
     }
 
-    public byte[] getBytes(double val) {
+    public static byte[] getBytes(double val) {
         byte [] dBytes = new byte[8];
         ByteBuffer.wrap(dBytes).putDouble(val);
         BigDecimal bd = doubleCompare.serialize(dBytes);
-        assertEquals(bd.doubleValue(), val);
+        assertEquals(bd.doubleValue(), val, bd.doubleValue()/10e6);
         return dBytes;
     }
 

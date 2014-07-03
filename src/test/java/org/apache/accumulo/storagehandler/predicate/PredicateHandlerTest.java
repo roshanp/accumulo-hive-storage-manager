@@ -19,13 +19,11 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-
-import static org.testng.Assert.*;
+import static org.junit.Assert.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -257,7 +255,7 @@ public class PredicateHandlerTest {
             AccumuloPredicateHandler.PushdownTuple tuple = new AccumuloPredicateHandler.PushdownTuple(sConditions.get(0));
             byte [] expectedVal = new byte[4];
             ByteBuffer.wrap(expectedVal).putInt(5);
-            assertEquals(tuple.getConstVal(), expectedVal);
+            assertArrayEquals(tuple.getConstVal(), expectedVal);
             assertEquals(tuple.getcOpt().getClass(), Equal.class);
             assertEquals(tuple.getpCompare().getClass(), IntCompare.class);
         } catch (Exception e) {
