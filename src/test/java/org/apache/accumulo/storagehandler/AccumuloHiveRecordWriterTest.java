@@ -19,6 +19,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+
 @RunWith(JMockit.class)
 public class AccumuloHiveRecordWriterTest {
 

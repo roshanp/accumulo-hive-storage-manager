@@ -5,15 +5,23 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import java.util.List;
 import java.util.Properties;
+
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
+import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.lazy.LazyString;
+import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
+
+import org.apache.accumulo.storagehandler.AccumuloSerde;
 
 public class AccumuloSerdeTest {
 
@@ -198,5 +206,16 @@ public class AccumuloSerdeTest {
             log.error(e);
             fail();
         }
+    }
+    @Test
+    public void serialize(@Mocked final LazySimpleSerDe.SerDeParameters serDeParameters,
+        @Mocked final List<? extends StructField> fields){
+      
+      new NonStrictExpectations() {{
+        serDeParameters.getColumnNames().size();
+        result=2;
+        
+      }};
+      
     }
 }
