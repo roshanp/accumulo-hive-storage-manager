@@ -26,7 +26,7 @@ public class AccumuloHiveRecordWriter implements RecordWriter {
   private static final Logger log = Logger.getLogger(AccumuloHiveRecordWriter.class);
   static {
     log.setLevel(Level.INFO);
-  }
+  }  
   private JobConf jobConf;
   private Properties properties;
   
@@ -37,20 +37,11 @@ public class AccumuloHiveRecordWriter implements RecordWriter {
 
   @Override
   public void write(Writable writable) throws IOException {
-    log.info("writing AccumuloHiveRow to accumulo " + writable.getClass());
-    
-    if(!(writable instanceof AccumuloHiveRow)){
-      try {
-        throw new SerDeException(getClass().getName() + " : " +
-            "Expected AccumuloHiveRow. Got " + writable.getClass().getName());
-      } catch (SerDeException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-    }
-
     // get accumulo connection
+    log.info("here");
+
     Connector connector = AccumuloHiveUtils.getConnector(jobConf);
+    log.info("here");
     // write accumulo records
     AccumuloHiveRow row = (AccumuloHiveRow)writable;
     BatchWriterConfig batchWriterConfig = new BatchWriterConfig();
