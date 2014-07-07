@@ -1,19 +1,27 @@
 package org.apache.accumulo.storagehandler;
+import static org.junit.Assert.*;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import org.junit.Test;
 
+import java.util.List;
 import java.util.Properties;
+
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
+import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.lazy.LazyString;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
-import org.testng.annotations.Test;
+
+import org.apache.accumulo.storagehandler.AccumuloSerde;
 
 public class AccumuloSerdeTest {
 
@@ -198,5 +206,39 @@ public class AccumuloSerdeTest {
             log.error(e);
             fail();
         }
+    }
+    
+    @Test
+    public void testSerialize(@Mocked final Object o,
+        @Mocked final ObjectInspector objectInspector,
+        @Mocked final StructObjectInspector structObjectInspector,
+        @Mocked final LazySimpleSerDe.SerDeParameters serDeParameters,
+        @Mocked final List<? extends StructField> fields,
+        @Mocked final int i,
+        @Mocked final StructField structField,
+        @Mocked final List<String> fetchCols,
+        @Mocked final String accumuloCol,
+        @Mocked final StringObjectInspector fieldDataStringOI,
+        @Mocked final Object fieldData,
+        @Mocked final Text value,
+        @Mocked final AccumuloHiveRow row) throws Exception{
+      
+      new NonStrictExpectations() {{
+        serDeParameters.getColumnNames().size();
+        result=1;
+        fields.get(i);
+        result=structField;
+        fetchCols.get(i);
+        result=accumuloCol;
+        fieldDataStringOI.getPrimitiveWritableObject(fieldData);
+        result=value;
+        accumuloCol.equals("rowID");
+        result=true;
+        row.setRowId(value.toString());
+        
+      }};
+      
+      serde.serialize(o, objectInspector);
+      
     }
 }

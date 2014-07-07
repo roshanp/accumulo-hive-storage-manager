@@ -11,7 +11,12 @@ import org.apache.hadoop.hive.serde2.lazy.LazyFactory;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.lazy.objectinspector.LazySimpleStructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -23,6 +28,7 @@ import java.util.regex.Pattern;
  * Deserialization from Accumulo to LazyAccumuloRow for Hive.
  *
  */
+
 public class AccumuloSerde implements SerDe {
     public static final String TABLE_NAME = "accumulo.table.name";
     public static final String USER_NAME = "accumulo.user.name";
@@ -37,6 +43,9 @@ public class AccumuloSerde implements SerDe {
     private LazyAccumuloRow cachedRow;
     private List<String> fetchCols;
     private ObjectInspector cachedObjectInspector;
+    private AccumuloHiveRow row;
+    private Configuration jobConfiguration;
+    private static final Pattern PIPE = Pattern.compile("[|]");
 
     private static final Logger log = Logger.getLogger(AccumuloSerde.class);
     static {
@@ -44,6 +53,7 @@ public class AccumuloSerde implements SerDe {
     }
 
     public void initialize(Configuration conf, Properties properties) throws SerDeException {
+        row = new AccumuloHiveRow();
         initAccumuloSerdeParameters(conf, properties);
 
         cachedObjectInspector = LazyFactory.createLazyStructInspector(
@@ -113,9 +123,44 @@ public class AccumuloSerde implements SerDe {
         return Mutation.class;
     }
 
+    /***
+     * convert Object into an AccumuloHiveRow (Writable) which is used by HiveAccumuloTableOutputFormat
+     */
     public Writable serialize(Object o, ObjectInspector objectInspector)
             throws SerDeException {
-        throw new UnsupportedOperationException("Serialization to Accumulo not yet supported");
+        // clear any existing data in AccumuloHiveRow
+        row.clear();
+        StructObjectInspector structObjectInspector = (StructObjectInspector) objectInspector;
+        List<? extends StructField> fields = structObjectInspector.getAllStructFieldRefs();
+        // count of columns SerDe was initialized with
+        int fieldCount = serDeParameters.getColumnNames().size();
+
+        for(int i=0; i < fieldCount; i++){
+          StructField structField = fields.get(i);
+          String accumuloCol = fetchCols.get(i);
+          if (structField != null){
+            // lookup accumulo mapping for this hive column and transform to AccumuloHiveRow
+            Object fieldData = structObjectInspector.getStructFieldData(o, structField);
+            ObjectInspector fieldDataOI = fields.get(i).getFieldObjectInspector();
+            StringObjectInspector fieldDataStringOI = (StringObjectInspector)fieldDataOI;
+            Text value = fieldDataStringOI.getPrimitiveWritableObject(fieldData);
+            // only create tuple if there is a value
+            if(value != null && !value.toString().equals("")){
+              if(accumuloCol.equals("rowID")){
+                row.setRowId(value.toString());
+              } else {
+                // split column family and column qualifier
+                String[] line = PIPE.split(accumuloCol);
+                String columnFamily = line[0];
+                String columnQualifier = line[1];
+                row.add(columnFamily, columnQualifier, value.getBytes());
+              }
+            }
+            
+          }
+        }
+        log.info("created AccumuloHiveRow = " + row.toString());
+        return row;
     }
 
     public Object deserialize(Writable writable) throws SerDeException {

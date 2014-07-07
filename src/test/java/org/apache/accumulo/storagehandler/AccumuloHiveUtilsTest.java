@@ -1,20 +1,20 @@
 package org.apache.accumulo.storagehandler;
 
+import static org.junit.Assert.*;
+
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.JobConf;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-import static org.testng.Assert.*;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.util.List;
 
 public class AccumuloHiveUtilsTest {
 
-    private JobConf conf = new JobConf();
+    private static JobConf conf = new JobConf();
 
     @BeforeClass
-    public void setup() {
+    public static void setup() {
         conf.set(serdeConstants.LIST_COLUMNS, "event_date,source,lat,lon,event_millis,id");
         conf.set(serdeConstants.LIST_COLUMN_TYPES, "string,string,double,double,long,int");
         conf.set(AccumuloSerde.COLUMN_MAPPINGS, "cf|dt,cf|src,cf|lat,cf|lon,cf|dtm,rowID");
@@ -32,7 +32,7 @@ public class AccumuloHiveUtilsTest {
         assertEquals(types.size(), 6);
     }
 
-    @Test(dependsOnMethods = "parseColumn")
+    @Test()
     public void rowId () {
         int index = AccumuloHiveUtils.getRowIdIndex(conf);
         assertEquals(index, 5);
@@ -45,7 +45,7 @@ public class AccumuloHiveUtilsTest {
     }
 
 
-    @Test(dependsOnMethods = "parseColumn")
+    @Test()
     public void hiveToAccumuloLookup() {
         String hiveExpected = "event_millis";
         String accumuloExpected = "cf|dtm";

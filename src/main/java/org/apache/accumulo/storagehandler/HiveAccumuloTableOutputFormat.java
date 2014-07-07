@@ -32,6 +32,7 @@ public class HiveAccumuloTableOutputFormat
         implements HiveOutputFormat<Text, Mutation>,
         OutputFormat<Text, Mutation>
 {
+  private static final Logger log = Logger.getLogger(HiveAccumuloTableOutputFormat.class);
 
     @Override
     public RecordWriter getHiveRecordWriter(
@@ -42,7 +43,8 @@ public class HiveAccumuloTableOutputFormat
             Properties properties,
             final Progressable progressable)
       throws IOException {
-        throw new UnsupportedOperationException("INSERT not yet supported to Accumulo");
+        //throw new UnsupportedOperationException("INSERT not yet supported to Accumulo");
+        return new AccumuloHiveRecordWriter(jobConf, properties);
     }
 
     @Override
@@ -56,6 +58,6 @@ public class HiveAccumuloTableOutputFormat
 
     @Override
     public void checkOutputSpecs(FileSystem fileSystem, JobConf jobConf) throws IOException {
-        throw new UnsupportedOperationException("INSERT not yet supported to Accumulo");
+        //throw new UnsupportedOperationException("INSERT not yet supported to Accumulo");
     }
 }

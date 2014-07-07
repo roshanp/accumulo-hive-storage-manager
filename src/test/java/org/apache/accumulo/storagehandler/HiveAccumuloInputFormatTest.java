@@ -1,10 +1,5 @@
 package org.apache.accumulo.storagehandler;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -45,13 +40,15 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.log4j.Logger;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class HiveAccumuloInputFormatTest {
 
 
-    private Instance mockInstance;
+    private static Instance mockInstance;
     public static final String MOCK_INSTANCE_NAME = "test";
     public static final String USER = "user";
     public static final String PASS = "password";
@@ -61,13 +58,13 @@ public class HiveAccumuloInputFormatTest {
     private static final Text SID = new Text("sid");
     private static final Text DEGREES = new Text("dgrs");
     private static final Text MILLIS = new Text("mills");
-    private HiveAccumuloTableInputFormat inputformat;
-    private JobConf conf;
+    private static HiveAccumuloTableInputFormat inputformat;
+    private static JobConf conf;
 
     private static final Logger log = Logger.getLogger(HiveAccumuloInputFormatTest.class);
 
     @BeforeClass
-    public void createMockKeyValues() {
+    public static void createMockKeyValues() {
         mockInstance =  new MockInstance(MOCK_INSTANCE_NAME);
         inputformat = new HiveAccumuloTableInputFormat();
         conf = new JobConf();
@@ -126,21 +123,21 @@ public class HiveAccumuloInputFormatTest {
         }
     }
 
-    private byte[] parseIntBytes(String s) {
+    private static byte[] parseIntBytes(String s) {
         int val = Integer.parseInt(s);
         byte [] valBytes = new byte[4];
         ByteBuffer.wrap(valBytes).putInt(val);
         return valBytes;
     }
 
-    private byte[] parseLongBytes(String s) {
+    private static byte[] parseLongBytes(String s) {
         long val = Long.parseLong(s);
         byte [] valBytes = new byte[8];
         ByteBuffer.wrap(valBytes).putLong(val);
         return valBytes;
     }
 
-    private byte[] parseDoubleBytes(String s) {
+    private static byte[] parseDoubleBytes(String s) {
         double val = Double.parseDouble(s);
         byte [] valBytes = new byte[8];
         ByteBuffer.wrap(valBytes).putDouble(val);
@@ -166,13 +163,13 @@ public class HiveAccumuloInputFormatTest {
             assertTrue(reader.next(rowId, row));
             assertEquals(row.getRowId(), rowId.toString());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), NAME.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), NAME.toString()), "brian".getBytes());
+            assertArrayEquals(row.getValue(COLUMN_FAMILY.toString(), NAME.toString()), "brian".getBytes());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), SID.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), SID.toString()), "1".getBytes());
+            assertArrayEquals(row.getValue(COLUMN_FAMILY.toString(), SID.toString()), "1".getBytes());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), DEGREES.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), DEGREES.toString()), "44.5".getBytes());
+            assertArrayEquals(row.getValue(COLUMN_FAMILY.toString(), DEGREES.toString()), "44.5".getBytes());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), MILLIS.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), MILLIS.toString()), "555".getBytes());
+            assertArrayEquals(row.getValue(COLUMN_FAMILY.toString(), MILLIS.toString()), "555".getBytes());
 
         } catch (IOException e) {
             log.error(e);
@@ -194,19 +191,19 @@ public class HiveAccumuloInputFormatTest {
             assertTrue(reader.next(rowId, row));
             assertEquals(row.getRowId(), rowId.toString());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), NAME.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), NAME.toString()), "brian".getBytes());
+            assertArrayEquals(row.getValue(COLUMN_FAMILY.toString(), NAME.toString()), "brian".getBytes());
 
             rowId = new Text("r2");
             assertTrue(reader.next(rowId, row));
             assertEquals(row.getRowId(), rowId.toString());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), NAME.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), NAME.toString()), "mark".getBytes());
+            assertArrayEquals(row.getValue(COLUMN_FAMILY.toString(), NAME.toString()), "mark".getBytes());
 
             rowId = new Text("r3");
             assertTrue(reader.next(rowId, row));
             assertEquals(row.getRowId(), rowId.toString());
             assertTrue(row.hasFamAndQual(COLUMN_FAMILY.toString(), NAME.toString()));
-            assertEquals(row.getValue(COLUMN_FAMILY.toString(), NAME.toString()), "dennis".getBytes());
+            assertArrayEquals(row.getValue(COLUMN_FAMILY.toString(), NAME.toString()), "dennis".getBytes());
 
             assertFalse(reader.next(rowId, row));
         }catch (IOException e) {
@@ -357,16 +354,16 @@ public class HiveAccumuloInputFormatTest {
                     assertEquals(item.getKey().getRow().toString(), "r1");
                     if(item.getKey().getColumnQualifier().equals(NAME)){
                         foundName = true;
-                        assertEquals(item.getValue().get(), "brian".getBytes());
+                        assertArrayEquals(item.getValue().get(), "brian".getBytes());
                     } else if (item.getKey().getColumnQualifier().equals(SID)) {
                         foundSid = true;
-                        assertEquals(item.getValue().get(), parseIntBytes("1"));
+                        assertArrayEquals(item.getValue().get(), parseIntBytes("1"));
                     } else if (item.getKey().getColumnQualifier().equals(DEGREES)) {
                         foundDegrees = true;
-                        assertEquals(item.getValue().get(), parseDoubleBytes("44.5"));
+                        assertArrayEquals(item.getValue().get(), parseDoubleBytes("44.5"));
                     } else if (item.getKey().getColumnQualifier().equals(MILLIS)) {
                         foundMillis = true;
-                        assertEquals(item.getValue().get(), parseLongBytes("555"));
+                        assertArrayEquals(item.getValue().get(), parseLongBytes("555"));
                     }
                 }
             }
